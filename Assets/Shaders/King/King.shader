@@ -176,11 +176,11 @@ Shader "Custom/King"
 
 				// Unfortunately it's impossible to get the gradient directly, we could only get partial derivatives w.r.t. screen space X and Y
 
-				// dist to edge increases inward, so the gradient points inward
-				float2 spikeGradientScreenspace_Square = normalize(float2(ddx(voronoi_distToEdge), ddy(voronoi_distToEdge)));
+				// dist to edge increases inward, so the gradient points inward and needs to be negated
+				float2 spikeGradientScreenspace_Square = -normalize(float2(ddx(voronoi_distToEdge), ddy(voronoi_distToEdge)));
 
-				// dist to center increases outwards, so the negative gradient points inward
-				float2 spikeGradientScreenspace_Round = -normalize(float2(ddx(voronoi_squaredDistToCenter), ddy(voronoi_squaredDistToCenter)));
+				// dist to center increases outwards, so the gradient points outwards, no need for negation
+				float2 spikeGradientScreenspace_Round = normalize(float2(ddx(voronoi_squaredDistToCenter), ddy(voronoi_squaredDistToCenter)));
 				
 				// the square gradient is more sharp as the distance is relative to each edge instead of the center point, and vice versa for round gradient
 				// for stylistic control we mix these two for a toon-shading effect
@@ -200,7 +200,7 @@ Shader "Custom/King"
 				float3 spikeGradientWorld_Clipped = spikeGradientTangent.x * worldTangent + spikeGradientTangent.z * worldBitangent;
 
 				// Finally we do actually want this to be a normal vector, so normalize it
-				float3 spikeNormal = -normalize(spikeGradientWorld_Clipped); // <-- idk why but negation is needed, probably some handed-ness issue with Unity spaces...
+				float3 spikeNormal = normalize(spikeGradientWorld_Clipped);
 				// Normal smoothing
 				spikeNormal = normalize(lerp(spikeNormal, worldNormal, spikeT)); // account for upward angle of spike
 				if (!shouldNotDiscard) discard;
@@ -441,13 +441,13 @@ Shader "Custom/King"
 				// as in their gradients either point directly into or against the radial.
 
 				// Unfortunately it's impossible to get the gradient directly, we could only get partial derivatives w.r.t. screen space X and Y
+				
+				// dist to edge increases inward, so the gradient points inward and needs to be negated
+				float2 spikeGradientScreenspace_Square = -normalize(float2(ddx(voronoi_distToEdge), ddy(voronoi_distToEdge)));
 
-				// dist to edge increases inward, so the gradient points inward
-				float2 spikeGradientScreenspace_Square = normalize(float2(ddx(voronoi_distToEdge), ddy(voronoi_distToEdge)));
-
-				// dist to center increases outwards, so the negative gradient points inward
-				float2 spikeGradientScreenspace_Round = -normalize(float2(ddx(voronoi_squaredDistToCenter), ddy(voronoi_squaredDistToCenter)));
-
+				// dist to center increases outwards, so the gradient points outwards, no need for negation
+				float2 spikeGradientScreenspace_Round = normalize(float2(ddx(voronoi_squaredDistToCenter), ddy(voronoi_squaredDistToCenter)));
+				
 				// the square gradient is more sharp as the distance is relative to each edge instead of the center point, and vice versa for round gradient
 				// for stylistic control we mix these two for a toon-shading effect
 				float2 spikeGradientScreenspace = lerp(spikeGradientScreenspace_Square, spikeGradientScreenspace_Round, _SpikeShadowSmoothnessFactor);
@@ -460,13 +460,13 @@ Shader "Custom/King"
 
 				// Use the world-to-tangent projection, similarly no normalization; also note this is 3x3
 				float3 spikeGradientTangent = mul(worldToTangentFrame, spikeGradientWorld.xyz);
-
+				
 				// We want the gradient to be completely *along* the surface, so we clip out the component of the projected gradient along the normal
 				// This "clipping" could be done by going *back* to world space but just ignoring the normal axis
 				float3 spikeGradientWorld_Clipped = spikeGradientTangent.x * worldTangent + spikeGradientTangent.z * worldBitangent;
 
 				// Finally we do actually want this to be a normal vector, so normalize it
-				float3 spikeNormal = -normalize(spikeGradientWorld_Clipped); // <-- idk why but negation is needed, probably some handed-ness issue with Unity spaces...
+				float3 spikeNormal = normalize(spikeGradientWorld_Clipped);
 				// Normal smoothing
 				spikeNormal = normalize(lerp(spikeNormal, worldNormal, spikeT)); // account for upward angle of spike
 				if (!shouldNotDiscard) discard;
